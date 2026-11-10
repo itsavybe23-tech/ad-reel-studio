@@ -1,0 +1,16 @@
+{
+  "name": "ad-reel-studio",
+  "version": "1.0.0",
+  "description": "Turn product and mockup photos into Higgsfield-generated marketing videos for TikTok, Reels, Shorts, Pinterest and X.",
+  "main": "server.js",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "build": "node -e \"console.log('nothing to build')\"",
+    "test": "node test/run-tests.js"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "express": "4.22.3"
+  }
+}

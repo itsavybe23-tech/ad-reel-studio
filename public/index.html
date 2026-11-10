@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ad Reel Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=DM+Serif+Display&family=JetBrains+Mono:wght@500&family=Poppins:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="logo" aria-hidden="true"></span><h1>Ad Reel Studio</h1><span class="pill" id="hfState">Higgsfield</span></div>
+  <nav class="steps" aria-label="Steps">
+    <a href="#s-product">1 Product</a><a href="#s-video">2 Video</a><a href="#s-generate">3 Generate</a><a href="#s-copy">4 Captions</a><a href="#s-export">5 Export</a>
+  </nav>
+  <button class="btn ghost sm" id="logout" type="button">Sign out</button>
+</header>
+
+<main class="wrap">
+  <p class="banner" id="setupBanner" hidden></p>
+
+  <!-- 1 PRODUCT -->
+  <section class="card" id="s-product">
+    <h2><span class="n">1</span> Product</h2>
+    <div class="grid2">
+      <div>
+        <label class="drop" id="drop">
+          <input type="file" id="photo" accept="image/jpeg,image/png,image/webp" hidden>
+          <img id="photoPrev" alt="" hidden>
+          <span id="dropText"><b>Upload a product or mockup photo</b><br><span class="muted">JPEG, PNG or WebP. Tap or drop it here.</span></span>
+        </label>
+        <div class="row gap">
+          <span class="lbl">Start frame</span>
+          <div class="chips" id="fitChips" role="radiogroup" aria-label="Start frame fit"></div>
+        </div>
+        <p class="hint">The video starts from this photo. "Fit" keeps the whole product and fills the edges with a soft blur. "Fill" crops to the video's shape.</p>
+      </div>
+      <div>
+        <div class="field"><span class="lbl">Shop</span><div class="chips" id="shopChips" role="radiogroup" aria-label="Shop"></div></div>
+        <div class="field"><span class="lbl">Category</span><div class="chips wrapchips" id="catChips" role="radiogroup" aria-label="Category"></div></div>
+        <div class="field"><label class="lbl" for="pName">Product name</label><input id="pName" data-bind="product.name" maxlength="80" placeholder="e.g. Retro Sunset Graphic Tee"></div>
+        <div class="field"><label class="lbl" for="pDesc">One-line description</label><input id="pDesc" data-bind="product.desc" maxlength="160" placeholder="What it is and who it's for"></div>
+        <div class="field"><span class="lbl">Selling points <button class="link" id="useCatFeats" type="button">Use category ideas</button></span>
+          <input data-bind="product.features.0" maxlength="60" aria-label="Selling point 1">
+          <input data-bind="product.features.1" maxlength="60" aria-label="Selling point 2">
+          <input data-bind="product.features.2" maxlength="60" aria-label="Selling point 3">
+        </div>
+        <div class="grid3">
+          <div class="field"><label class="lbl" for="pPrice">Price</label><input id="pPrice" data-bind="product.price" maxlength="14" placeholder="$24"></div>
+          <div class="field span2"><label class="lbl" for="pLink">Shop link</label><input id="pLink" data-bind="product.link" maxlength="120" placeholder="etsy.com/shop/yourshop"></div>
+        </div>
+        <div class="field"><label class="lbl" for="pCta">Call to action</label><input id="pCta" data-bind="product.cta" maxlength="28" placeholder="Shop on Etsy"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 VIDEO -->
+  <section class="card" id="s-video">
+    <h2><span class="n">2</span> Video style</h2>
+    <div class="stylecards" id="styleCards" role="radiogroup" aria-label="Video style"></div>
+    <div class="grid2">
+      <div>
+        <div class="field" id="proOpts">
+          <span class="lbl">Shot</span><div class="chips" id="sceneChips" role="radiogroup" aria-label="Shot"></div>
+          <span class="lbl">Camera move</span><div class="chips wrapchips" id="camChips" role="radiogroup" aria-label="Camera move"></div>
+        </div>
+        <div class="field" id="blogOpts" hidden>
+          <label class="lbl" for="bLine">What the creator says</label>
+          <input id="bLine" data-bind="line" maxlength="120">
+          <label class="check"><input type="checkbox" data-bind="multiShot"> Cut between 3 shots (Kling only)</label>
+        </div>
+        <div class="field"><label class="lbl" for="model">Higgsfield model</label>
+          <select id="model" data-bind="model"></select>
+          <p class="hint" id="modelNote"></p>
+        </div>
+        <div class="grid3">
+          <div class="field" id="resField"><label class="lbl" for="res">Quality</label><select id="res" data-bind="res"></select></div>
+          <div class="field span2"><span class="lbl">Sound</span><label class="check"><input type="checkbox" data-bind="audio"> Let Higgsfield make sound (voice and ambience)</label></div>
+        </div>
+      </div>
+      <div>
+        <span class="lbl">Platforms</span>
+        <div class="plats" id="plats"></div>
+        <div class="field"><span class="lbl">Pinterest</span><div class="chips" id="pinChips" role="radiogroup" aria-label="Pinterest clip"></div></div>
+        <div class="field"><span class="lbl">X</span><div class="chips" id="xChips" role="radiogroup" aria-label="X clip"></div></div>
+        <p class="hint">TikTok, Reels and Shorts share one vertical clip, so you only pay for it once. Pinterest and X can reuse it too.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 GENERATE -->
+  <section class="card" id="s-generate">
+    <h2><span class="n">3</span> Generate with Higgsfield</h2>
+    <p class="muted">Each clip below spends Higgsfield credits only when you press its Generate button.</p>
+    <div id="clips"></div>
+    <details class="library"><summary>Earlier videos</summary><div id="library"><p class="muted">None yet.</p></div></details>
+  </section>
+
+  <!-- 4 COPY -->
+  <section class="card" id="s-copy">
+    <h2><span class="n">4</span> Captions, hooks and hashtags</h2>
+    <div class="row gap"><button class="btn sm" id="rebuildCopy" type="button">Rewrite from product and category</button><span class="hint">Edits you make here are kept until you rewrite.</span></div>
+    <div class="tabs" id="copyTabs" role="tablist"></div>
+    <div id="copyPanel"></div>
+  </section>
+
+  <!-- 5 EXPORT -->
+  <section class="card" id="s-export">
+    <h2><span class="n">5</span> Finish and export</h2>
+    <div class="grid2">
+      <div>
+        <div class="tabs" id="pvTabs" role="tablist"></div>
+        <div class="stage" id="stage"><canvas id="pv" width="1080" height="1920" aria-label="Video preview"></canvas></div>
+        <div class="transport">
+          <button class="btn sm" id="play" type="button">Play</button>
+          <input type="range" id="scrub" min="0" max="1000" value="0" aria-label="Preview position">
+          <label class="check sm"><input type="checkbox" id="showSafe"> Safe zones</label>
+          <label class="check sm"><input type="checkbox" id="pvSound"> Sound</label>
+        </div>
+        <p class="hint" id="pvNote"></p>
+      </div>
+      <div>
+        <span class="lbl">On-video text</span>
+        <div class="toggles">
+          <label class="check"><input type="checkbox" data-bind="overlay.hook"> Hook</label>
+          <label class="check"><input type="checkbox" data-bind="overlay.name"> Product name</label>
+          <label class="check"><input type="checkbox" data-bind="overlay.features"> Selling points</label>
+          <label class="check"><input type="checkbox" data-bind="overlay.price"> Price</label>
+          <label class="check"><input type="checkbox" data-bind="overlay.endcard"> End card with CTA</label>
+        </div>
+        <div class="grid3">
+          <div class="field"><label class="lbl" for="brand">Brand</label><input type="color" id="brand" data-bind="look.brand"></div>
+          <div class="field"><label class="lbl" for="accent">Accent</label><input type="color" id="accent" data-bind="look.accent"></div>
+          <div class="field"><label class="lbl" for="font">Font</label><select id="font" data-bind="look.font"></select></div>
+        </div>
+        <div class="field"><label class="lbl" for="tstyle">Text style</label>
+          <select id="tstyle" data-bind="look.textStyle"><option value="box">White boxes</option><option value="accent">Accent boxes</option><option value="shadow">Shadow only</option></select></div>
+        <div class="field"><span class="lbl">Background music (optional)</span>
+          <input type="file" id="music" accept="audio/*" aria-label="Background music">
+          <div class="grid3"><label class="lbl">Clip sound <input type="range" min="0" max="1" step="0.05" data-bind="look.clipVol"></label><label class="lbl">Music <input type="range" min="0" max="1" step="0.05" data-bind="look.musicVol"></label><button class="link" id="musicClear" type="button" hidden>Remove music</button></div>
+        </div>
+        <div class="queue" id="queue"></div>
+        <div class="row gap"><button class="btn primary" id="renderAll" type="button">Make all videos</button><button class="btn" id="zipAll" type="button" disabled>Download all (.zip)</button></div>
+        <p class="hint" id="engineNote"></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<dialog id="confirm">
+  <form method="dialog">
+    <h3 id="cTitle">Generate this clip?</h3>
+    <p id="cBody"></p>
+    <div class="row gap end"><button class="btn" value="no">Not now</button><button class="btn primary" value="yes" id="cYes">Generate</button></div>
+  </form>
+</dialog>
+<p class="toast" id="toast" role="status" aria-live="polite"></p>
+
+<script src="/vendor/mp4-muxer.js"></script>
+<script src="/core.js"></script>
+<script src="/catalog.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>
