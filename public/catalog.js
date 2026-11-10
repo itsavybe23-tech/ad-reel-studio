@@ -169,21 +169,98 @@ function compositionHint(shape) {
 }
 const KEEP = s => `Keep ${s} exactly as in the reference image: same design, colors, text and logo, no warping or extra elements.`;
 
+/* ---------- shot library ----------
+   {s} is replaced with the category's subject ("the acrylic print").
+   home: only offered for wall art, tapestries and blankets. */
+const HOME_CATS = new Set(['aluminum', 'acrylic', 'tapestry', 'blanket']);
+const PRO_SHOTS = [
+  { group: 'Studio', id: 'turntable', label: 'Turntable spin', text: '{s} slowly rotates on a clean studio turntable against a seamless backdrop, every side in view' },
+  { group: 'Studio', id: 'pushin', label: 'Slow push-in', text: 'the camera creeps slowly toward {s} as the background melts into soft bokeh' },
+  { group: 'Studio', id: 'macro', label: 'Macro texture', text: 'extreme macro gliding across the surface and texture of {s}, light raking across the detail' },
+  { group: 'Studio', id: 'reveal', label: 'Fabric reveal', text: 'a soft piece of fabric slides away to reveal {s} in a single beam of light' },
+  { group: 'Studio', id: 'flatlay', label: 'Flat lay', text: 'top-down flat lay of {s} styled on a neutral surface with a few matching props' },
+  { group: 'Studio', id: 'overhead', label: 'Overhead drift', text: 'the camera drifts slowly over {s} from directly above, props sliding in and out of frame' },
+  { group: 'Studio', id: 'shadow', label: 'Plant shadow play', text: '{s} sits in soft light as leaf shadows from a nearby plant drift slowly across it' },
+  { group: 'Lifestyle', id: 'golden', label: 'Golden-hour window light', text: 'warm golden-hour sunlight streams through a window across {s}, dust motes floating in the air' },
+  { group: 'Lifestyle', id: 'hands', label: 'Hands pick it up', text: 'hands reach into frame and gently pick up and present {s} to the camera' },
+  { group: 'Lifestyle', id: 'model', label: 'Lifestyle with a model', text: 'a smiling model naturally shows off {s} in a stylish, sunlit setting' },
+  { group: 'Lifestyle', id: 'unbox', label: 'Unboxing', text: 'hands lift {s} out of tissue paper in a neat shipping box and turn it toward the camera' },
+  { group: 'Lifestyle', id: 'roomreveal', label: 'Room reveal from doorway', home: true, text: 'the camera glides from a doorway into a styled room, revealing {s} as the centerpiece' },
+  { group: 'Lifestyle', id: 'beforeafter', label: 'Before and after', home: true, text: 'a plain, empty space, then the same space styled with {s}, a clean match cut between the two' },
+  { group: 'Lifestyle', id: 'cozy', label: 'Cozy evening', home: true, text: '{s} in a cozy room at night, warm lamps and candles glowing, rain on the window' },
+  { group: 'Seasonal and gifts', id: 'gift', label: 'Gift wrap', text: '{s} beside wrapping paper, a ribbon and a gift tag, warm festive light' },
+  { group: 'Seasonal and gifts', id: 'holiday', label: 'Holiday scene', text: '{s} in a cozy holiday setting with a decorated tree and soft string lights' },
+  { group: 'Seasonal and gifts', id: 'autumn', label: 'Autumn styling', text: '{s} styled with autumn leaves, small pumpkins and warm amber tones' },
+  { group: 'Seasonal and gifts', id: 'summer', label: 'Summer brights', text: '{s} in bright summer daylight with fresh flowers and greenery' },
+  { group: 'Seasonal and gifts', id: 'valentine', label: 'Valentine\'s Day', text: '{s} with red roses, a handwritten card and soft pink light' }
+];
+const BLOG_SHOTS = [
+  { group: 'Creator moments', id: 'bunbox', label: 'Unboxing reaction', text: 'opens the package, pulls out {s} and reacts with genuine excitement' },
+  { group: 'Creator moments', id: 'bclose', label: 'Close-up show', text: 'holds {s} close to the phone camera and turns it to show the details' },
+  { group: 'Creator moments', id: 'breview', label: 'Talking review', text: 'sits facing the camera holding {s} and talks about why they love it' },
+  { group: 'Creator moments', id: 'bpov', label: 'POV hands', text: 'films a first-person view of their own hands holding {s} and tilting it in the light' },
+  { group: 'Creator moments', id: 'bhaul', label: 'Haul favorite', text: 'lays out a few recent finds on the bed and picks up {s} as the favorite' },
+  { group: 'Creator moments', id: 'bbeforeafter', label: 'Before and after', home: true, text: 'films the space before, then shows it again after adding {s}' },
+  { group: 'Creator moments', id: 'broomtour', label: 'Room tour', home: true, text: 'walks the camera through their room and stops to show off {s}' },
+  { group: 'Gifts', id: 'bgift', label: 'Gift moment', text: 'hands {s} to a friend, who opens it and lights up' },
+  { group: 'Gifts', id: 'bgiftwrap', label: 'Wrapping a gift', text: 'wraps {s} with paper and ribbon, then shows the finished gift to the camera' }
+];
+const MAX_SHOTS = 4;
+const fillS = (t, subj) => t.replace(/\{s\}/g, subj);
+
+/** All the shots a category can use for a style, grouped for the picker: [{group, id, label, text}] */
+function shotOptions(c, style) {
+  const home = HOME_CATS.has(c.id), out = [], mine = 'Made for ' + c.label.toLowerCase();
+  if (style === 'blogger') {
+    out.push({ group: mine, id: 'buse', label: 'Show it in use', text: c.blogger.action });
+    BLOG_SHOTS.forEach(o => { if (!o.home || home) out.push({ group: o.group, id: o.id, label: o.label, text: fillS(o.text, c.subject) }); });
+  } else {
+    const labels = scenesFor(c);
+    Object.keys(c.pro).forEach(k => out.push({ group: mine, id: k, label: labels[k] || k, text: c.pro[k] }));
+    PRO_SHOTS.forEach(o => { if ((!o.home || home) && !c.pro[o.id]) out.push({ group: o.group, id: o.id, label: o.label, text: fillS(o.text, c.subject) }); });
+  }
+  return out;
+}
+/** The picked shots that exist for this category and style, in pick order, at most MAX_SHOTS. */
+function pickedShots(st, c) {
+  const opts = shotOptions(c, st.style), byId = new Map(opts.map(o => [o.id, o]));
+  const want = ((st.picks && st.picks[st.style]) || []).filter(id => byId.has(id)).slice(0, MAX_SHOTS);
+  if (!want.length) want.push(st.style === 'blogger' ? 'buse' : (byId.has(st.scene) ? st.scene : 'hero'));
+  return want.map(id => byId.get(id));
+}
+function splitDurations(total, n) {
+  n = Math.max(1, Math.min(n, Math.floor(total / 2) || 1));
+  const base = Math.floor(total / n), out = Array(n).fill(base); out[0] += total - base * n; return out;
+}
+
 /** Build the prompt (and, for multi-shot Kling, a shot list) for one clip. */
 function buildPrompt(st, shape, modelInfo) {
   const cat = catById(st.cat), p = st.product, subj = cat.subject, keep = KEEP(subj);
   const audioLine = st.audio ? '' : ' No speech.';
+  const picks = pickedShots(st, cat), multi = !!(modelInfo && modelInfo.multiShot && st.multiShot);
+  const total = (st.durations && st.durations[shape]) || 10;
   if (st.style === 'pro') {
-    const scene = cat.pro[st.scene] || cat.pro.hero, cam = CAMERAS[st.camera] || CAMERAS.dolly;
-    const prompt = `Professional commercial product video, filmed by a professional videographer on a cinema camera. ${cap(scene)}. Camera: ${cam}. Soft, high-end studio-quality lighting, shallow depth of field, natural color grade, smooth stabilized motion, photorealistic, crisp detail. ${productLine(p)} ${keep} ${compositionHint(shape)} No on-screen text, no watermark.${audioLine}`.replace(/\s+/g, ' ').trim();
-    return { prompt, shots: [] };
+    const cam = CAMERAS[st.camera] || CAMERAS.dolly;
+    const action = picks.length === 1 ? `${cap(picks[0].text)}.`
+      : `A short edit of ${picks.length} shots. ${picks.map((x, i) => `Shot ${i + 1}: ${x.text}.`).join(' ')}`;
+    const prompt = `Professional commercial product video, filmed by a professional videographer on a cinema camera. ${action} Camera: ${cam}. Soft, high-end studio-quality lighting, shallow depth of field, natural color grade, smooth stabilized motion, photorealistic, crisp detail. ${productLine(p)} ${keep} ${compositionHint(shape)} No on-screen text, no watermark.${audioLine}`.replace(/\s+/g, ' ').trim();
+    let shots = [];
+    if (multi && picks.length > 1) {
+      const d = splitDurations(total, picks.length);
+      shots = d.map((sec, i) => ({ prompt: clipText(`Professional product video on a cinema camera. ${cap(picks[i].text)}. Camera: ${cam}. ${keep}`, 500), duration: sec }));
+    }
+    return { prompt, shots };
   }
   const b = cat.blogger, line = (st.line || b.line).replace(/"/g, '\'');
   const speech = st.audio ? ` Speaking naturally to camera, they say: "${line}"` : ' No speech.';
-  const prompt = `Authentic UGC-style social video filmed on a smartphone by a friendly lifestyle blogger, handheld with natural slight shake, casual and genuine, like a real TikTok or Instagram product review. ${cap(b.setting)}, the creator ${b.action}. Natural daylight, real home setting, true-to-life color.${speech} ${productLine(p)} ${keep} ${compositionHint(shape)} No captions, no watermark.`.replace(/\s+/g, ' ').trim();
+  const doing = picks.map(x => x.text).join(', then ');
+  const prompt = `Authentic UGC-style social video filmed on a smartphone by a friendly lifestyle blogger, handheld with natural slight shake, casual and genuine, like a real TikTok or Instagram product review. ${cap(b.setting)}, the creator ${doing}. Natural daylight, real home setting, true-to-life color.${speech} ${productLine(p)} ${keep} ${compositionHint(shape)} No captions, no watermark.`.replace(/\s+/g, ' ').trim();
   let shots = [];
-  if (modelInfo && modelInfo.multiShot && st.multiShot) {
-    const total = st.durations[shape] || 10, a = Math.max(1, Math.round(total * 0.35)), c = Math.max(1, Math.round(total * 0.3)), m = Math.max(1, total - a - c);
+  if (multi && picks.length > 1) {
+    const d = splitDurations(total, picks.length), last = d.length - 1;
+    shots = d.map((sec, i) => ({ prompt: clipText(`Phone-shot UGC. ${cap(b.setting)}, a friendly creator ${picks[i].text}.${i === 0 ? ' ' + keep : ''}${st.audio && i === last ? ` They say: "${line}"` : ''}`, 500), duration: sec }));
+  } else if (multi && picks[0].id === 'buse') {
+    const a = Math.max(1, Math.round(total * 0.35)), c = Math.max(1, Math.round(total * 0.3)), m = Math.max(1, total - a - c);
     if (b.shots) {
       const t = b.shots, d = [a, m, c];
       shots = [
@@ -191,13 +268,13 @@ function buildPrompt(st, shape, modelInfo) {
         { prompt: clipText(`Phone-shot UGC. ${t[1]} ${keep}`, 500), duration: d[1] },
         { prompt: clipText(`Phone-shot UGC. ${t[2]}${st.audio ? ` They say: "${line}"` : ''}`, 500), duration: d[2] }
       ];
-      return { prompt, shots };
+    } else {
+      shots = [
+        { prompt: clipText(`Phone-shot UGC. ${cap(b.setting)}, a friendly creator holds ${subj} up to the camera with an excited smile.${st.audio ? ' They say: "You have to see this."' : ''}`, 500), duration: a },
+        { prompt: clipText(`Handheld close-up of ${subj}, the creator's hand turns it to show the design and details. ${keep}`, 500), duration: m },
+        { prompt: clipText(`The creator uses or wears ${subj} and gives a thumbs up to camera.${st.audio ? ` They say: "${line}"` : ''}`, 500), duration: c }
+      ];
     }
-    shots = [
-      { prompt: clipText(`Phone-shot UGC. ${cap(b.setting)}, a friendly creator holds ${subj} up to the camera with an excited smile.${st.audio ? ' They say: "You have to see this."' : ''}`, 500), duration: a },
-      { prompt: clipText(`Handheld close-up of ${subj}, the creator's hand turns it to show the design and details. ${keep}`, 500), duration: m },
-      { prompt: clipText(`The creator uses or wears ${subj} and gives a thumbs up to camera.${st.audio ? ` They say: "${line}"` : ''}`, 500), duration: c }
-    ];
   }
   return { prompt, shots };
 }

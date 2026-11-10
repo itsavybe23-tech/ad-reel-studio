@@ -11,7 +11,7 @@ function uuid(){return (crypto.randomUUID?crypto.randomUUID():'k'+Date.now().toS
 /* ---------------- state ---------------- */
 const DEF={
   product:{name:'',desc:'',features:['','',''],price:'',link:'',cta:''},
-  cat:'aluminum',fit:'fit',style:'pro',scene:'hero',camera:'dolly',line:'',multiShot:true,
+  cat:'aluminum',fit:'fit',style:'pro',scene:'hero',picks:{pro:['hero'],blogger:['buse']},camera:'dolly',line:'',multiShot:true,
   model:'seedance2',res:'1080p',audio:true,
   plats:{tiktok:true,reels:true,shorts:true,pinterest:true,x:true},
   pin:'reuse',x:'reuse',
@@ -153,7 +153,53 @@ function renderProduct(){
   chipGroup($('catChips'),CATEGORIES.filter(c=>c.shop===cat().shop).map(c=>[c.id,c.label]),()=>S.cat,v=>{S.cat=v;fixScene();renderVideoOpts();refreshPrompts();autoCopy();updatePlaceholders()});
   updatePlaceholders();
 }
-function fixScene(){if(!(S.scene in cat().pro))S.scene='hero'}
+function fixScene(){
+  if(!(S.scene in cat().pro))S.scene='hero';
+  if(!S.picks||typeof S.picks!=='object')S.picks={};
+  for(const st of ['pro','blogger']){
+    const ok=new Set(shotOptions(cat(),st).map(o=>o.id));
+    const kept=(Array.isArray(S.picks[st])?S.picks[st]:[]).filter(id=>ok.has(id)).slice(0,MAX_SHOTS);
+    S.picks[st]=kept.length?kept:[st==='blogger'?'buse':'hero'];
+  }
+}
+/* ---------- shot picker: a pop-up list with checkboxes ---------- */
+function renderShotPicker(){
+  const c=cat(),opts=shotOptions(c,S.style),picked=pickedShots(S,c),ids=picked.map(o=>o.id);
+  const btn=$('shotBtn'),pop=$('shotPop'),tags=$('shotTags');
+  btn.textContent=(picked.length===1?picked[0].label:`${picked.length} shots picked`)+'  ▾';
+  tags.textContent='';
+  if(picked.length>1)picked.forEach((o,i)=>{const t=document.createElement('button');t.type='button';t.className='chip';t.setAttribute('aria-label','Remove '+o.label);t.textContent=`${i+1}. ${o.label} ×`;
+    t.onclick=()=>setPicks(ids.filter(x=>x!==o.id));tags.append(t)});
+  pop.textContent='';
+  const head=document.createElement('div');head.className='shothead';
+  head.innerHTML=`<b>Pick up to ${MAX_SHOTS} shots</b><span class="muted">${ids.length} of ${MAX_SHOTS}</span>`;pop.append(head);
+  let group='';
+  for(const o of opts){
+    if(o.group!==group){group=o.group;const h=document.createElement('h4');h.textContent=group;pop.append(h)}
+    const on=ids.includes(o.id),full=!on&&ids.length>=MAX_SHOTS;
+    const row=document.createElement('label');row.className='shotrow'+(full?' off':'');
+    row.innerHTML=`<input type="checkbox" ${on?'checked':''} ${full?'disabled':''}><span><b>${esc(o.label)}</b><small>${esc(cap(o.text))}</small></span>`;
+    row.querySelector('input').onchange=e=>{
+      if(e.target.checked)setPicks([...ids,o.id]);
+      else if(ids.length>1)setPicks(ids.filter(x=>x!==o.id));
+      else{e.target.checked=true;toast('Keep at least one shot.')}
+    };
+    pop.append(row);
+  }
+  const done=document.createElement('button');done.type='button';done.className='btn primary sm shotdone';done.textContent='Done';done.onclick=()=>openShots(false);pop.append(done);
+}
+function setPicks(list){
+  S.picks[S.style]=list.slice(0,MAX_SHOTS);
+  if(S.style==='pro'&&list.length)S.scene=list[0];
+  persist();const keep=$('shotPop').scrollTop;renderShotPicker();$('shotPop').scrollTop=keep;refreshPrompts();
+}
+function openShots(open){
+  const pop=$('shotPop'),btn=$('shotBtn');pop.hidden=!open;btn.setAttribute('aria-expanded',String(open));
+  if(open){const first=pop.querySelector('input:not([disabled])');if(first)first.focus()}else btn.focus();
+}
+$('shotBtn').onclick=()=>openShots($('shotPop').hidden);
+document.addEventListener('click',e=>{if(!$('shotPop').hidden&&!$('shotPick').contains(e.target))openShots(false)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('shotPop').hidden)openShots(false)});
 function updatePlaceholders(){
   const c=cat();document.querySelectorAll('[data-bind^="product.features."]').forEach((el,i)=>el.placeholder=c.features[i]||'');
   $('pCta').placeholder=SHOPS[c.shop].cta;$('bLine').placeholder=c.blogger.line;
@@ -167,7 +213,7 @@ function renderVideoOpts(){
     b.innerHTML=`<b>${esc(v.label)}</b><span>${esc(v.blurb)}</span>`;
     b.onclick=()=>{if(S.style===k)return;S.style=k;S.model=STYLES[k].models[0];clampDurations();persist();renderVideoOpts();renderClips()};sc.append(b)}
   $('proOpts').hidden=S.style!=='pro';$('blogOpts').hidden=S.style!=='blogger';
-  chipGroup($('sceneChips'),Object.entries(scenesFor(cat())),()=>S.scene,v=>{S.scene=v;refreshPrompts()});
+  renderShotPicker();
   chipGroup($('camChips'),Object.entries({dolly:'Dolly in',orbit:'Orbit',push:'Push and focus',gimbal:'Gimbal track',crane:'Crane down',macro:'Macro light sweep'}),()=>S.camera,v=>{S.camera=v;refreshPrompts()});
   const sel=$('model'),rec=STYLES[S.style].models;sel.textContent='';
   const order=[...rec,...Object.keys(MODELS).filter(k=>!rec.includes(k))];
@@ -192,7 +238,7 @@ function promptFor(shape){
   const auto=autoPrompt(shape);
   const p=S.edited[shape]&&S.prompts[shape]?S.prompts[shape]:auto.prompt;
   const shots=S.edited[shape]&&S.shots[shape]&&S.shots[shape].length?S.shots[shape]:auto.shots;
-  return {prompt:p,shots:(model().multiShot&&S.style==='blogger'&&S.multiShot)?shots:[]};
+  return {prompt:p,shots:(model().multiShot&&S.multiShot)?shots:[]};
 }
 function refreshPrompts(){
   for(const shape of neededShapes()){

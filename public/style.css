@@ -112,3 +112,17 @@ dialog h3{margin-bottom:8px}
 .login-card label{font-weight:700;font-size:13px}
 .msg{color:var(--bad);min-height:1.2em;margin:0;font-size:13.5px}
 .note{font-size:13px;color:var(--warn)}
+
+/* shot picker */
+.shotpick{position:relative}
+.shotbtn{width:100%;text-align:left;display:flex;justify-content:space-between;white-space:normal}
+.shotpop{position:absolute;z-index:30;top:calc(100% + 6px);left:0;width:min(400px,calc(100vw - 32px));max-height:min(440px,62vh);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 36px rgba(0,0,0,.22);padding:10px}
+.shothead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:2px 6px 4px;font-size:14px}
+.shotpop h4{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:12px 6px 4px}
+.shotrow{display:flex;gap:10px;align-items:flex-start;padding:7px 6px;border-radius:9px;cursor:pointer;font-size:14px}
+.shotrow:hover{background:var(--panel2)}
+.shotrow input{margin-top:3px;flex:none}
+.shotrow small{display:block;color:var(--muted);font-size:12px;line-height:1.35;margin-top:2px}
+.shotrow.off{opacity:.45;cursor:default}
+.shotdone{position:sticky;bottom:0;width:100%;margin-top:8px}
+#shotTags:empty{display:none}

@@ -62,14 +62,22 @@
     <div class="stylecards" id="styleCards" role="radiogroup" aria-label="Video style"></div>
     <div class="grid2">
       <div>
+        <div class="field">
+          <span class="lbl" id="shotLbl">Shots</span>
+          <div class="shotpick" id="shotPick">
+            <button type="button" class="btn shotbtn" id="shotBtn" aria-haspopup="dialog" aria-expanded="false" aria-labelledby="shotLbl shotBtn"></button>
+            <div class="shotpop" id="shotPop" role="dialog" aria-label="Pick shots" hidden></div>
+          </div>
+          <div class="chips" id="shotTags"></div>
+          <label class="check"><input type="checkbox" data-bind="multiShot"> Cut between the picked shots (Kling only)</label>
+          <p class="hint">Pick up to 4. Other models put them in one clip, in order.</p>
+        </div>
         <div class="field" id="proOpts">
-          <span class="lbl">Shot</span><div class="chips" id="sceneChips" role="radiogroup" aria-label="Shot"></div>
           <span class="lbl">Camera move</span><div class="chips wrapchips" id="camChips" role="radiogroup" aria-label="Camera move"></div>
         </div>
         <div class="field" id="blogOpts" hidden>
           <label class="lbl" for="bLine">What the creator says</label>
           <input id="bLine" data-bind="line" maxlength="120">
-          <label class="check"><input type="checkbox" data-bind="multiShot"> Cut between 3 shots (Kling only)</label>
         </div>
         <div class="field"><label class="lbl" for="model">Higgsfield model</label>
           <select id="model" data-bind="model"></select>
