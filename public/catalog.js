@@ -131,14 +131,35 @@ const STYLES = {
   blogger: { label: 'Blogger showcase', blurb: 'Phone-shot creator video: someone shows the product to camera and says why they love it.',
              models: ['kling3pro', 'seedance2ref', 'seedance2', 'kling3std'] }
 };
-const CAMERAS = {
-  dolly: 'slow dolly-in toward the product',
-  orbit: 'smooth 180-degree orbit around the product',
-  push: 'gentle push-in with a rack focus from background to product',
-  gimbal: 'gimbal tracking shot following the action',
-  crane: 'slow crane down from above, settling at eye level',
-  macro: 'locked-off macro shot with a slow light sweep'
-};
+/* Camera moves. The video models take them as words in the prompt. */
+const CAMERA_MOVES = [
+  { group: 'Classic', id: 'dolly', label: 'Dolly in', text: 'slow dolly-in toward the product' },
+  { group: 'Classic', id: 'dollyout', label: 'Dolly out', text: 'slow dolly-out, pulling back to reveal the scene around the product' },
+  { group: 'Classic', id: 'push', label: 'Push in with focus pull', text: 'gentle push-in with a rack focus from background to product' },
+  { group: 'Classic', id: 'static', label: 'Locked-off (still camera)', text: 'locked-off static camera on a tripod, only the light and the scene move' },
+  { group: 'Classic', id: 'pan', label: 'Slow pan', text: 'slow horizontal pan across the scene that lands on the product' },
+  { group: 'Classic', id: 'tilt', label: 'Tilt up reveal', text: 'slow tilt up from the floor that reveals the product' },
+  { group: 'Classic', id: 'truck', label: 'Side tracking (truck)', text: 'smooth sideways tracking move parallel to the product' },
+  { group: 'Orbit and crane', id: 'orbit', label: 'Half orbit', text: 'smooth 180-degree orbit around the product' },
+  { group: 'Orbit and crane', id: 'orbit360', label: '360 orbit', text: 'smooth full 360-degree orbit around the product' },
+  { group: 'Orbit and crane', id: 'arc', label: 'Arc', text: 'gentle arc around the product while keeping it centered in frame' },
+  { group: 'Orbit and crane', id: 'crane', label: 'Crane down', text: 'slow crane down from above, settling at eye level' },
+  { group: 'Orbit and crane', id: 'craneup', label: 'Crane up', text: 'slow crane up, rising above the product to a high angle' },
+  { group: 'Orbit and crane', id: 'topdown', label: 'Overhead spin', text: 'overhead top-down camera slowly rotating above the product' },
+  { group: 'Dynamic', id: 'crashzoom', label: 'Crash zoom in', text: 'fast crash zoom in onto the product, then a steady hold' },
+  { group: 'Dynamic', id: 'whip', label: 'Whip pan', text: 'quick whip pan with motion blur that lands on the product' },
+  { group: 'Dynamic', id: 'fpv', label: 'FPV drone fly-through', text: 'FPV drone fly-through of the space, swooping in to the product' },
+  { group: 'Dynamic', id: 'bullet', label: 'Bullet time', text: 'bullet-time moment, the scene frozen as the camera sweeps around the product' },
+  { group: 'Dynamic', id: 'robo', label: 'Robotic arm sweep', text: 'fast, precise robotic-arm camera sweep around the product' },
+  { group: 'Dynamic', id: 'dutch', label: 'Dutch tilt', text: 'slow move framed at a tilted dutch angle for a stylish, dynamic feel' },
+  { group: 'Close-up and handheld', id: 'macro', label: 'Macro light sweep', text: 'locked-off macro shot with a slow light sweep' },
+  { group: 'Close-up and handheld', id: 'pushmacro', label: 'Macro push-in', text: 'slow push-in at macro distance across the surface detail' },
+  { group: 'Close-up and handheld', id: 'rackfocus', label: 'Rack focus', text: 'steady shot with a rack focus from a foreground object to the product' },
+  { group: 'Close-up and handheld', id: 'gimbal', label: 'Gimbal tracking', text: 'gimbal tracking shot following the action' },
+  { group: 'Close-up and handheld', id: 'walk', label: 'Gimbal walk-through', text: 'smooth gimbal walk-through of the room toward the product' },
+  { group: 'Close-up and handheld', id: 'handheld', label: 'Handheld', text: 'natural handheld camera with gentle movement, documentary feel' }
+];
+const CAMERAS = Object.fromEntries(CAMERA_MOVES.map(m => [m.id, m.text]));
 const SCENES = { hero: 'Hero reveal', lifestyle: 'Lifestyle, in use', detail: 'Detail close-up' };
 /* Scene choices for one category: its own labels if it has them, else the standard three. */
 function scenesFor(c) { return c && c.sceneLabels ? c.sceneLabels : SCENES; }

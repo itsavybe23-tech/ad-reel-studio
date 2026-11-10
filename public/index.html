@@ -73,7 +73,11 @@
           <p class="hint">Pick up to 4. Other models put them in one clip, in order.</p>
         </div>
         <div class="field" id="proOpts">
-          <span class="lbl">Camera move</span><div class="chips wrapchips" id="camChips" role="radiogroup" aria-label="Camera move"></div>
+          <span class="lbl" id="camLbl">Camera move</span>
+          <div class="shotpick" id="camPick">
+            <button type="button" class="btn shotbtn" id="camBtn" aria-haspopup="dialog" aria-expanded="false" aria-labelledby="camLbl camBtn"></button>
+            <div class="shotpop" id="camPop" role="dialog" aria-label="Pick a camera move" hidden></div>
+          </div>
         </div>
         <div class="field" id="blogOpts" hidden>
           <label class="lbl" for="bLine">What the creator says</label>

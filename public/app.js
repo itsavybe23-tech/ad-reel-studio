@@ -188,18 +188,35 @@ function renderShotPicker(){
   }
   const done=document.createElement('button');done.type='button';done.className='btn primary sm shotdone';done.textContent='Done';done.onclick=()=>openShots(false);pop.append(done);
 }
+function renderCamPicker(){
+  if(!CAMERAS[S.camera])S.camera='dolly';
+  const cur=CAMERA_MOVES.find(m=>m.id===S.camera),btn=$('camBtn'),pop=$('camPop');
+  btn.textContent=cur.label+'  ▾';pop.textContent='';
+  let group='';
+  for(const m of CAMERA_MOVES){
+    if(m.group!==group){group=m.group;const h=document.createElement('h4');h.textContent=group;pop.append(h)}
+    const row=document.createElement('label');row.className='shotrow';
+    row.innerHTML=`<input type="radio" name="cammove" ${m.id===S.camera?'checked':''}><span><b>${esc(m.label)}</b><small>${esc(cap(m.text))}</small></span>`;
+    row.querySelector('input').onchange=()=>{S.camera=m.id;persist();renderCamPicker();refreshPrompts();openPop('cam',false)};
+    pop.append(row);
+  }
+}
 function setPicks(list){
   S.picks[S.style]=list.slice(0,MAX_SHOTS);
   if(S.style==='pro'&&list.length)S.scene=list[0];
   persist();const keep=$('shotPop').scrollTop;renderShotPicker();$('shotPop').scrollTop=keep;refreshPrompts();
 }
-function openShots(open){
-  const pop=$('shotPop'),btn=$('shotBtn');pop.hidden=!open;btn.setAttribute('aria-expanded',String(open));
-  if(open){const first=pop.querySelector('input:not([disabled])');if(first)first.focus()}else btn.focus();
+const POPS=['shot','cam'];
+function openPop(k,open){
+  const pop=$(k+'Pop'),btn=$(k+'Btn');
+  if(open)POPS.filter(o=>o!==k).forEach(o=>{if(!$(o+'Pop').hidden)openPop(o,false)});
+  pop.hidden=!open;btn.setAttribute('aria-expanded',String(open));
+  if(open){const first=pop.querySelector('input:checked:not([disabled])')||pop.querySelector('input:not([disabled])');if(first)first.focus()}else btn.focus();
 }
-$('shotBtn').onclick=()=>openShots($('shotPop').hidden);
-document.addEventListener('click',e=>{if(!$('shotPop').hidden&&!$('shotPick').contains(e.target))openShots(false)});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('shotPop').hidden)openShots(false)});
+const openShots=open=>openPop('shot',open);
+POPS.forEach(k=>{$(k+'Btn').onclick=()=>openPop(k,$(k+'Pop').hidden)});
+document.addEventListener('click',e=>{POPS.forEach(k=>{if(!$(k+'Pop').hidden&&!$(k+'Pick').contains(e.target))openPop(k,false)})});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')POPS.forEach(k=>{if(!$(k+'Pop').hidden)openPop(k,false)})});
 function updatePlaceholders(){
   const c=cat();document.querySelectorAll('[data-bind^="product.features."]').forEach((el,i)=>el.placeholder=c.features[i]||'');
   $('pCta').placeholder=SHOPS[c.shop].cta;$('bLine').placeholder=c.blogger.line;
@@ -214,7 +231,7 @@ function renderVideoOpts(){
     b.onclick=()=>{if(S.style===k)return;S.style=k;S.model=STYLES[k].models[0];clampDurations();persist();renderVideoOpts();renderClips()};sc.append(b)}
   $('proOpts').hidden=S.style!=='pro';$('blogOpts').hidden=S.style!=='blogger';
   renderShotPicker();
-  chipGroup($('camChips'),Object.entries({dolly:'Dolly in',orbit:'Orbit',push:'Push and focus',gimbal:'Gimbal track',crane:'Crane down',macro:'Macro light sweep'}),()=>S.camera,v=>{S.camera=v;refreshPrompts()});
+  renderCamPicker();
   const sel=$('model'),rec=STYLES[S.style].models;sel.textContent='';
   const order=[...rec,...Object.keys(MODELS).filter(k=>!rec.includes(k))];
   order.forEach((k,i)=>{if(!MODELS[k])return;const o=document.createElement('option');o.value=k;o.textContent=MODELS[k].label+(i===0?' (recommended)':'');sel.append(o)});
